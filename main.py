@@ -1,6 +1,13 @@
 #! python3
 
-import requests, bs4, json
+import requests, bs4, json, sys
+
+# sysargv[1] = URL
+class WebData(object):
+	def __init__(self):
+		self.r = requests.get(sys.argv[1])
+
+
 
 r = requests.get('http://www.njuskalo.hr/ps4-konzole')
 data = r.text
@@ -21,4 +28,4 @@ for link in soup.find_all('li', class_="EntityList-item--Regular"):
 
 
 data = open("data.p", "w")
-data.write(json.dumps(dataList))
+data.write(json.dumps(dataList))git
