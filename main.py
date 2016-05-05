@@ -1,7 +1,7 @@
 #! python3
 
 import requests, bs4, json, sys
-
+import send
 # sysargv[1] = URL
 
 
