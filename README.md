@@ -1,4 +1,4 @@
-# njuskascrape
+# NjuskaScrape
 
 Crawler for croatian ad website
 
