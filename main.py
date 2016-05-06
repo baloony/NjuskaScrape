@@ -3,6 +3,12 @@
 import requests, bs4, json, sys, configparser
 import send
 
+class Soup(object):
+	def __init__(self, url):
+		self.r = requests.get(url)
+		self.data = r.text
+		self.soup = bs4.BeautifulSoup(data, 'lxml')
+
 class Oglas(object):
 	def __init__(self, pid, title, price):
 		self.id = pid
@@ -27,15 +33,16 @@ class DB(object):
         for k in self.oglaslist:
             print("url:" + k)
 
-if len(sys.argv) < 5:
-	print("""
+if len(sys.argv) < 5 or len(sys.argv) > 5:
+	print(
+"""
 Usage: main.py [url] [e-mail] [minPrice] [maxPrice]
 
 url - url of the category you want to monitor
 e-mail - your e-mail account on which you want to receive notifications
 minPrice - minimal price for which the ads are sent
 maxPrice - maximal price for which the ads are sent
-		""")
+""")
 	sys.exit()
 
 
@@ -47,11 +54,14 @@ url = sys.argv[1]
 email = sys.argv[2]
 priceRange = sys.argv[3:]
 
+# Soup should be in class
 r = requests.get(url)
 data = r.text
 soup = bs4.BeautifulSoup(data, 'lxml')
 
-#  Construct a new URL - new URL forms when using the price range -> have to extract CategoryID from previous
+
+
+
 categoryId = soup.find("input", {"id": "categoryId"})['value']
 newUrl = "http://www.njuskalo.hr/?ctl=browse_ads&sort=new&categoryId=" \
 "{categoryId}&locationId=&locationId_level_0=0&price[min]={priceMin}" \
