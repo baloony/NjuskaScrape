@@ -2,13 +2,7 @@
 
 import requests, bs4, json, sys, configparser
 import send
-# sysargv[1] = URL
-
-
-#class WebData(object):
-#	def __init__(self):
-#		self.r = requests.get(sys.argv[1])
-#		self.soup = bs4.BeautifulSoup(r.text, 'lxml')
+# sysargv[] = URL, email, priceRange(1000 2000)
 
 class Oglas(object):
 	def __init__(self, pid, title, price):
@@ -37,22 +31,28 @@ class DB(object):
 
 config = configparser.ConfigParser()
 config.read('config.cfg')
-mailParams = config.items['SERVER']  # [smtp server, username, password]
+mailParams = config.items('SERVER')  # [smtp server, username, password]
 
 url = sys.argv[1]
-mail = sys.argv[2]
+email = sys.argv[2]
+priceRange = sys.argv[3:]
 
-#  TODO Make an input statement about the price range and construct a new URL
-
-r = requests.get('http://www.njuskalo.hr/ps4-konzole')
+r = requests.get(url)
 data = r.text
 soup = bs4.BeautifulSoup(data, 'lxml')
+
+#  Construct a new URL - new URL forms when using the price range -> have to extract CategoryID from previous
+categoryId = soup.find("input", {"id": "categoryId"})['value']
+newUrl = "http://www.njuskalo.hr/?ctl=browse_ads&sort=new&categoryId={categoryId}&locationId=&locationId_level_0=0&price[min]={priceMin}&price[max]={priceMax}".format(categoryId = categoryId, priceMin = priceRange[0], priceMax = priceRange[1])
+
+print(newUrl)
+
 urlResult = UrlResultSet()
 db = DB()
 
 for link in soup.find_all('li', class_="EntityList-item--Regular"):
 
-	print("##### " + link.article.h3.a.string + " ##### ")
+	print("##### " + link.article.h3.a.string + " #####")
 	print("ID oglasa je: " + link.article.h3.a.get("name"))
 	print("Link: http://www.njuskalo.hr" + link.article.h3.a.get("href"))
 	for price in link.find_all(class_="price"):
@@ -62,6 +62,3 @@ for link in soup.find_all('li', class_="EntityList-item--Regular"):
 
 db.addresultset(url, urlResult)
 db.printinfo()
-
-#data = open("data.p", "w")
-#data.write(json.dumps(dataList))
