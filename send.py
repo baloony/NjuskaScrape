@@ -13,6 +13,7 @@ class Mail(object):
 		self.server.ehlo()
 		self.server.starttls()
 		self.server.login(username, password)
+		
 
 	def sendMail(self, title, price, link, to_address):
 		self.message = MIMEMultipart()
