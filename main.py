@@ -2,7 +2,6 @@
 
 import requests, bs4, json, sys, configparser
 import send
-# sysargv[] = URL, email, priceRange(1000 2000)
 
 class Oglas(object):
 	def __init__(self, pid, title, price):
@@ -28,6 +27,17 @@ class DB(object):
         for k in self.oglaslist:
             print("url:" + k)
 
+if len(sys.argv) < 5:
+	print("""
+Usage: main.py [url] [e-mail] [minPrice] [maxPrice]
+
+url - url of the category you want to monitor
+e-mail - your e-mail account on which you want to receive notifications
+minPrice - minimal price for which the ads are sent
+maxPrice - maximal price for which the ads are sent
+		""")
+	sys.exit()
+
 
 config = configparser.ConfigParser()
 config.read('config.cfg')
@@ -43,15 +53,15 @@ soup = bs4.BeautifulSoup(data, 'lxml')
 
 #  Construct a new URL - new URL forms when using the price range -> have to extract CategoryID from previous
 categoryId = soup.find("input", {"id": "categoryId"})['value']
-newUrl = "http://www.njuskalo.hr/?ctl=browse_ads&sort=new&categoryId={categoryId}&locationId=&locationId_level_0=0&price[min]={priceMin}&price[max]={priceMax}".format(categoryId = categoryId, priceMin = priceRange[0], priceMax = priceRange[1])
+newUrl = "http://www.njuskalo.hr/?ctl=browse_ads&sort=new&categoryId=" \
+"{categoryId}&locationId=&locationId_level_0=0&price[min]={priceMin}" \
+"&price[max]={priceMax}".format(categoryId = categoryId, priceMin = priceRange[0], priceMax = priceRange[1])
 
-print(newUrl)
 
 urlResult = UrlResultSet()
 db = DB()
 
 for link in soup.find_all('li', class_="EntityList-item--Regular"):
-
 	print("##### " + link.article.h3.a.string + " #####")
 	print("ID oglasa je: " + link.article.h3.a.get("name"))
 	print("Link: http://www.njuskalo.hr" + link.article.h3.a.get("href"))
@@ -62,3 +72,5 @@ for link in soup.find_all('li', class_="EntityList-item--Regular"):
 
 db.addresultset(url, urlResult)
 db.printinfo()
+
+print(newUrl)
