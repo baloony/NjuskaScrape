@@ -8,8 +8,8 @@ from email.mime.text import MIMEText
 # --
 
 class Mail(object):
-	def __init__(self, username, password):
-		self.server = smtplib.SMTP('smtp.gmail.com', 587)
+	def __init__(self, username, password, smtpServer):
+		self.server = smtplib.SMTP(smtpserver, 587)
 		self.server.ehlo()
 		self.server.starttls()
 		self.server.login(username, password)
@@ -33,5 +33,5 @@ class Mail(object):
 		
 
 
-# m = Mail("username", "password")
+# m = Mail("username", "password", "smtp.gmail.com")
 # m.sendMail('PS4 nov, zapakiran', "2999.99", "www.njuskalo.hr/ps4", 'ivan.esterajher@ztm.hr')

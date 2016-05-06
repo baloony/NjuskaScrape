@@ -1,6 +1,6 @@
 #! python3
 
-import requests, bs4, json, sys
+import requests, bs4, json, sys, configparser
 import send
 # sysargv[1] = URL
 
@@ -15,7 +15,6 @@ class Oglas(object):
 		self.id = pid
 		self.title = title
 		self.price = price
-		super().__init__()
 
 class UrlResultSet(object):
 	def __init__(self):
@@ -35,15 +34,16 @@ class DB(object):
         for k in self.oglaslist:
             print("url:" + k)
 
-        
 
-        
+config = configparser.ConfigParser()
+config.read('config.cfg')
+mailParams = config.items['SERVER']  # [smtp server, username, password]
 
+url = sys.argv[1]
+mail = sys.argv[2]
 
+#  TODO Make an input statement about the price range and construct a new URL
 
-
-
-url = 'http://www.njuskalo.hr/ps4-konzole'
 r = requests.get('http://www.njuskalo.hr/ps4-konzole')
 data = r.text
 soup = bs4.BeautifulSoup(data, 'lxml')
