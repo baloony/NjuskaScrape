@@ -15,12 +15,18 @@ class Oglas(object):
 		self.title = title
 		self.price = price
 
+	def __eq__(self, other):
+		return self.id == other.id
+
 class UrlResultSet(object):
 	def __init__(self):
 		self.results = []
 
 	def addOglas(self, oglas):
 		self.results.append(oglas)
+
+	def __contains__(self, oglas):
+		return oglas in self.results
 
 class DB(object):
     def __init__(self):
