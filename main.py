@@ -2,6 +2,7 @@
 
 import requests, bs4, json, sys, configparser
 import send
+import pickle
 
 class Soup(object):
 	def __init__(self, url):
@@ -28,6 +29,9 @@ class UrlResultSet(object):
 	def __contains__(self, oglas):
 		return oglas in self.results
 
+	def __repr__(self):
+		return "Result set with {} items".format(self.results.__len__())
+
 class DB(object):
     def __init__(self):
         self.oglaslist = {}
@@ -36,8 +40,19 @@ class DB(object):
         self.oglaslist[url] = resultset
 
     def printinfo(self):
-        for k in self.oglaslist:
-            print("url:" + k)
+        print(self.oglaslist)
+
+	def save(self):
+         with open('db.bin', 'wb') as f:
+            pickle.dump(self.oglaslist, f)
+
+	def load(self):
+         with open('db.bin', 'rb') as f:
+            temp = pickle.load(f)
+
+        self.oglaslist = temp
+
+
 
 if len(sys.argv) < 5 or len(sys.argv) > 5:
 	print(
