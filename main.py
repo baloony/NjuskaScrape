@@ -4,33 +4,37 @@ import requests, bs4, json, sys, configparser
 import send
 import pickle
 
+
 class Soup(object):
-	def __init__(self, url):
-		self.r = requests.get(url)
-		self.data = r.text
-		self.soup = bs4.BeautifulSoup(data, 'lxml')
+    def __init__(self, url):
+        self.r = requests.get(url)
+        self.data = r.text
+        self.soup = bs4.BeautifulSoup(data, 'lxml')
+
 
 class Oglas(object):
-	def __init__(self, pid, title, price):
-		self.id = pid
-		self.title = title
-		self.price = price
+    def __init__(self, pid, title, price):
+        self.id = pid
+        self.title = title
+        self.price = price
 
-	def __eq__(self, other):
-		return self.id == other.id
+    def __eq__(self, other):
+        return self.id == other.id
+
 
 class UrlResultSet(object):
-	def __init__(self):
-		self.results = []
+    def __init__(self):
+        self.results = []
 
-	def addOglas(self, oglas):
-		self.results.append(oglas)
+    def addOglas(self, oglas):
+        self.results.append(oglas)
 
-	def __contains__(self, oglas):
-		return oglas in self.results
+    def __contains__(self, oglas):
+        return oglas in self.results
 
-	def __repr__(self):
-		return "Result set with {} items".format(self.results.__len__())
+    def __repr__(self):
+        return "Result set with {} items".format(self.results.__len__())
+
 
 class DB(object):
     def __init__(self):
@@ -42,66 +46,68 @@ class DB(object):
     def printinfo(self):
         print(self.oglaslist)
 
-	def save(self):
-         with open('db.bin', 'wb') as f:
-            pickle.dump(self.oglaslist, f)
+        def save(self):
+            with open('db.bin', 'wb') as f:
+                pickle.dump(self.oglaslist, f)
 
-	def load(self):
-         with open('db.bin', 'rb') as f:
-            temp = pickle.load(f)
+        def load(self):
+            with open('db.bin', 'rb') as f:
+                temp = pickle.load(f)
 
-        self.oglaslist = temp
-
-
-
-if len(sys.argv) < 5 or len(sys.argv) > 5:
-	print(
-"""
-Usage: main.py [url] [e-mail] [minPrice] [maxPrice]
-
-url - url of the category you want to monitor
-e-mail - your e-mail account on which you want to receive notifications
-minPrice - minimal price for which the ads are sent
-maxPrice - maximal price for which the ads are sent
-""")
-	sys.exit()
+            self.oglaslist = temp
 
 
-config = configparser.ConfigParser()
-config.read('config.cfg')
-mailParams = config.items('SERVER')  # [smtp server, username, password]
+def main():
+    if len(sys.argv) < 5 or len(sys.argv) > 5:
+        print(
+            """
+            Usage: main.py [url] [e-mail] [minPrice] [maxPrice]
 
-url = sys.argv[1]
-email = sys.argv[2]
-priceRange = sys.argv[3:]
+            url - url of the category you want to monitor
+            e-mail - your e-mail account on which you want to receive notifications
+            minPrice - minimal price for which the ads are sent
+            maxPrice - maximal price for which the ads are sent
+            """)
+        sys.exit()
 
-# Soup should be in class
-r = requests.get(url)
-data = r.text
-soup = bs4.BeautifulSoup(data, 'lxml')
+    urlResult = UrlResultSet()
+    db = DB()
+
+    config = configparser.ConfigParser()
+    config.read('config.cfg')
+    mailParams = config.items('SERVER')  # [smtp server, username, password]
+
+    url = sys.argv[1]
+    email = sys.argv[2]
+    priceRange = sys.argv[3:]
+
+    # Soup should be in class
+    r = requests.get(url)
+    data = r.text
+    soup = bs4.BeautifulSoup(data, 'lxml')
+
+    # Creating a new URL with price range
+
+    categoryId = soup.find("input", {"id": "categoryId"})['value']
+    newUrl = "http://www.njuskalo.hr/?ctl=browse_ads&sort=new&categoryId=" \
+             "{categoryId}&locationId=&locationId_level_0=0&price[min]={priceMin}" \
+             "&price[max]={priceMax}".format(categoryId=categoryId, priceMin=priceRange[0], priceMax=priceRange[1])
+
+    r2 = requests.get(newUrl)
+    data2 = r2.text
+    soup2 = bs4.BeautifulSoup(data2, 'lxml')
+
+    for link in soup2.find_all('li', class_="EntityList-item--Regular"):
+        print("##### " + link.article.h3.a.string + " #####")
+        print("ID oglasa je: " + link.article.h3.a.get("name"))
+        print("Link: http://www.njuskalo.hr" + link.article.h3.a.get("href"))
+        for price in link.find_all(class_="price"):
+            print("Cijena je: " + price.text + "\n")
+            o = Oglas(link.article.h3.a.get, link.article.h3.a.get("name"), link.article.h3.a.get("href"))
+            urlResult.addOglas(o)
+
+    db.addresultset(url, urlResult)
+    db.printinfo()
 
 
-
-
-categoryId = soup.find("input", {"id": "categoryId"})['value']
-newUrl = "http://www.njuskalo.hr/?ctl=browse_ads&sort=new&categoryId=" \
-"{categoryId}&locationId=&locationId_level_0=0&price[min]={priceMin}" \
-"&price[max]={priceMax}".format(categoryId = categoryId, priceMin = priceRange[0], priceMax = priceRange[1])
-
-
-urlResult = UrlResultSet()
-db = DB()
-
-for link in soup.find_all('li', class_="EntityList-item--Regular"):
-	print("##### " + link.article.h3.a.string + " #####")
-	print("ID oglasa je: " + link.article.h3.a.get("name"))
-	print("Link: http://www.njuskalo.hr" + link.article.h3.a.get("href"))
-	for price in link.find_all(class_="price"):
-		print("Cijena je: " + price.text + "\n")
-		o = Oglas(link.article.h3.a.get, link.article.h3.a.get("name"), link.article.h3.a.get("href"))
-		urlResult.addOglas(o)
-
-db.addresultset(url, urlResult)
-db.printinfo()
-
-print(newUrl)
+main()
