@@ -43,7 +43,6 @@ class DB(object):
 
     def __init__(self):
         self.oglaslist = {}
-        sys.setrecursionlimit(9000)
 
     def addresultset(self, url, resultset):
         self.oglaslist[url] = resultset
@@ -100,16 +99,13 @@ def main():
 
     for link in soup2.find_all('li', class_="EntityList-item--Regular"):
         for price in link.find_all(class_="price"):
-            o = Oglas(link.article.h3.a.get("name"), link.article.h3.a.string, price.text)
-            urlResult.addOglas(o)
+            urlResult.addOglas(Oglas(link.article.h3.a.get("name"), str(link.article.h3.a.string), price.text))
 
-
-    print(o)
 
     db.addresultset(args.url, urlResult)
     db.printinfo()
     db.save()
 
-    db2 = DB()
-    db2.load()
+    #db2 = DB()
+    #db2.load()
 main()
