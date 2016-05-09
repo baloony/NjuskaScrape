@@ -1,6 +1,6 @@
 #! python3
 
-import requests, bs4, json, sys, configparser
+import requests, bs4, sys, configparser, argparse
 import send
 import pickle
 
@@ -58,17 +58,16 @@ class DB(object):
 
 
 def main():
-    if len(sys.argv) < 5 or len(sys.argv) > 5:
-        print(
-            """
-            Usage: main.py [url] [e-mail] [minPrice] [maxPrice]
-
-            url - url of the category you want to monitor
-            e-mail - your e-mail account on which you want to receive notifications
-            minPrice - minimal price for which the ads are sent
-            maxPrice - maximal price for which the ads are sent
-            """)
-        sys.exit()
+    parser = argparse.ArgumentParser(description="Scrape Njuskalo for ads in certain price range")
+    parser.add_argument('url',
+                        help='URL of the category you would like to get notifications for')
+    parser.add_argument('email',
+                        help="Your e-mail address on which you want to receive notifications")
+    parser.add_argument('minPrice', metavar="minPrice", type=int,
+                        help="Minimal price for a category")
+    parser.add_argument('maxPrice', metavar="maxPrice", type=int,
+                        help="Maximal price for a category")
+    args = parser.parse_args()
 
     urlResult = UrlResultSet()
     db = DB()
@@ -77,12 +76,8 @@ def main():
     config.read('config.cfg')
     mailParams = config.items('SERVER')  # [smtp server, username, password]
 
-    url = sys.argv[1]
-    email = sys.argv[2]
-    priceRange = sys.argv[3:]
-
     # Soup should be in class
-    r = requests.get(url)
+    r = requests.get(args.url)
     data = r.text
     soup = bs4.BeautifulSoup(data, 'lxml')
 
@@ -91,7 +86,7 @@ def main():
     categoryId = soup.find("input", {"id": "categoryId"})['value']
     newUrl = "http://www.njuskalo.hr/?ctl=browse_ads&sort=new&categoryId=" \
              "{categoryId}&locationId=&locationId_level_0=0&price[min]={priceMin}" \
-             "&price[max]={priceMax}".format(categoryId=categoryId, priceMin=priceRange[0], priceMax=priceRange[1])
+             "&price[max]={priceMax}".format(categoryId=categoryId, priceMin=args.minPrice, priceMax=args.maxPrice)
 
     r2 = requests.get(newUrl)
     data2 = r2.text
@@ -106,8 +101,7 @@ def main():
             o = Oglas(link.article.h3.a.get, link.article.h3.a.get("name"), link.article.h3.a.get("href"))
             urlResult.addOglas(o)
 
-    db.addresultset(url, urlResult)
+    db.addresultset(args.url, urlResult)
     db.printinfo()
-
 
 main()
