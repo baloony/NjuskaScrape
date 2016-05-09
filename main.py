@@ -37,8 +37,10 @@ class UrlResultSet(object):
 
 
 class DB(object):
+
     def __init__(self):
         self.oglaslist = {}
+        sys.setrecursionlimit(9000)
 
     def addresultset(self, url, resultset):
         self.oglaslist[url] = resultset
@@ -46,13 +48,14 @@ class DB(object):
     def printinfo(self):
         print(self.oglaslist)
 
-        def save(self):
-            with open('db.bin', 'wb') as f:
-                pickle.dump(self.oglaslist, f)
+    def save(self):
 
-        def load(self):
-            with open('db.bin', 'rb') as f:
-                temp = pickle.load(f)
+        with open('db.bin', 'wb') as f:
+            pickle.dump(self.oglaslist, f)
+
+    def load(self):
+        with open('db.bin', 'rb') as f:
+            temp = pickle.load(f)
 
             self.oglaslist = temp
 
@@ -103,5 +106,8 @@ def main():
 
     db.addresultset(args.url, urlResult)
     db.printinfo()
+    db.save()
 
+    # db2 = DB()
+    # db2.load()
 main()
