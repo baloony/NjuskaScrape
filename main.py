@@ -21,6 +21,9 @@ class Oglas(object):
     def __eq__(self, other):
         return self.id == other.id
 
+    def __str__(self):
+        return "id: {}, title: {}, price: {}".format(self.id, self.title, self.price)
+
 
 class UrlResultSet(object):
     def __init__(self):
@@ -96,18 +99,17 @@ def main():
     soup2 = bs4.BeautifulSoup(data2, 'lxml')
 
     for link in soup2.find_all('li', class_="EntityList-item--Regular"):
-        print("##### " + link.article.h3.a.string + " #####")
-        print("ID oglasa je: " + link.article.h3.a.get("name"))
-        print("Link: http://www.njuskalo.hr" + link.article.h3.a.get("href"))
         for price in link.find_all(class_="price"):
-            print("Cijena je: " + price.text + "\n")
-            o = Oglas(link.article.h3.a.get, link.article.h3.a.get("name"), link.article.h3.a.get("href"))
+            o = Oglas(link.article.h3.a.get("name"), link.article.h3.a.string, price.text)
             urlResult.addOglas(o)
+
+
+    print(o)
 
     db.addresultset(args.url, urlResult)
     db.printinfo()
     db.save()
 
-    # db2 = DB()
-    # db2.load()
+    db2 = DB()
+    db2.load()
 main()
